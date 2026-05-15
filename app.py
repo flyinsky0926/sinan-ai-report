@@ -25,31 +25,26 @@ def run():
 
             page = browser.new_page()
 
-            print("前往登入頁")
-
             page.goto("https://broker.s338.com.tw/")
 
             page.wait_for_timeout(5000)
 
-            # 直接抓所有 input
-            inputs = page.locator("input")
-
-            print("input數量:", inputs.count())
+            print("開始登入")
 
             # 帳號
-            inputs.nth(0).fill(BROKER_ID)
+            page.get_by_placeholder("請輸入帳號").fill(BROKER_ID)
 
             # 密碼
-            inputs.nth(1).fill(BROKER_PASSWORD)
+            page.get_by_placeholder("請輸入密碼").fill(BROKER_PASSWORD)
 
-            # 登入
-            inputs.nth(2).click()
+            # 點登入
+            page.locator('input[type="submit"]').click()
 
             page.wait_for_timeout(8000)
 
-            print("登入完成")
+            print("登入成功")
 
-            # 前往業績頁
+            # 業績頁
             page.goto(
                 "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
             )
@@ -77,7 +72,6 @@ def run():
                     cols = rows.nth(i).locator("td")
 
                     name = cols.nth(0).inner_text().strip()
-
                     status = cols.nth(2).inner_text().strip()
 
                     if status != "受理":
@@ -126,6 +120,7 @@ def run():
                 font-size:72px;
                 color:#ffd95a;
                 font-weight:bold;
+                margin-bottom:10px;
             }}
 
             .sub {{
