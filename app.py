@@ -1,49 +1,81 @@
-
+from flask import Flask
 from playwright.sync_api import sync_playwright
-import os
 from datetime import datetime, timedelta
+import os
+import threading
+
+app = Flask(__name__)
 
 BROKER_ID = os.getenv("BROKER_ID")
 BROKER_PASSWORD = os.getenv("BROKER_PASSWORD")
 
-print("🚀 信安雲林 AI 戰報系統啟動")
 
-yesterday = datetime.now() - timedelta(days=1)
+def run_report():
 
-print(f"📅 查詢日期：{yesterday.strftime('%Y-%m-%d')}")
+    print("🚀 信安雲林 AI 戰報系統啟動")
 
-with sync_playwright() as p:
+    yesterday = datetime.now() - timedelta(days=1)
 
-    browser = p.chromium.launch(headless=True)
+    print(f"📅 查詢日期：{yesterday.strftime('%Y-%m-%d')}")
 
-    page = browser.new_page()
+    with sync_playwright() as p:
 
-    print("🔐 前往 broker 登入頁")
+        browser = p.chromium.launch(headless=True)
 
-    page.goto("https://broker.s338.com.tw/")
+        page = browser.new_page()
 
-    page.wait_for_timeout(3000)
+        print("🔐 前往 broker 登入頁")
 
-    print("⌨️ 輸入帳號密碼")
+        page.goto("https://broker.s338.com.tw/")
 
-    page.fill('input[type="text"]', BROKER_ID)
+        page.wait_for_timeout(3000)
 
-    page.fill('input[type="password"]', BROKER_PASSWORD)
+        print("⌨️ 輸入帳號密碼")
 
-    page.keyboard.press("Enter")
+        page.fill('input[type="text"]', BROKER_ID)
 
-    page.wait_for_timeout(5000)
+        page.fill('input[type="password"]', BROKER_PASSWORD)
 
-    print("✅ 登入完成")
+        page.keyboard.press("Enter")
 
-    print("🎯 開始進入績效頁面")
+        page.wait_for_timeout(5000)
 
-    page.goto("https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1")
+        print("✅ 登入完成")
 
-    page.wait_for_timeout(5000)
+        print("🎯 開始進入績效頁面")
 
-    print("📊 業績頁面載入成功")
+        page.goto(
+            "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
+        )
 
-    print("🏆 AI 戰報測試成功")
+        page.wait_for_timeout(5000)
 
-    browser.close()
+        print("📊 業績頁面載入成功")
+
+        print("🏆 AI 戰報測試成功")
+
+        browser.close()
+
+
+@app.route("/")
+def home():
+    return "信安 AI 戰報系統運行中"
+
+
+@app.route("/run")
+def run_now():
+
+    thread = threading.Thread(target=run_report)
+    thread.start()
+
+    return "AI 戰報開始執行"
+
+
+if __name__ == "__main__":
+
+    port = int(os.environ.get("PORT", 8080))
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
