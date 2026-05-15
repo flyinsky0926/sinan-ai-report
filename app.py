@@ -10,13 +10,17 @@ BROKER_PASSWORD = os.getenv("BROKER_PASSWORD")
 
 @app.route("/")
 def home():
-    return "AI 戰報系統正常運行"
+    return "信安 AI 戰報系統正常運行"
 
 
 @app.route("/run")
 def run():
 
-    report_html = ""
+    members = []
+
+    total_case = 0
+    total_premium = 0
+    total_fee = 0
 
     try:
 
@@ -29,7 +33,6 @@ def run():
 
             page = browser.new_page()
 
-            # 登入
             page.goto("https://broker.s338.com.tw/")
 
             page.wait_for_timeout(3000)
@@ -42,7 +45,6 @@ def run():
 
             page.wait_for_timeout(5000)
 
-            # 業績頁
             page.goto(
                 "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
             )
@@ -52,10 +54,6 @@ def run():
             rows = page.locator("table tbody tr")
 
             count = rows.count()
-
-            total_case = 0
-            total_premium = 0
-            total_fee = 0
 
             for i in range(count):
 
@@ -80,20 +78,45 @@ def run():
 
                     total_fee += float(fee.replace(",", ""))
 
-                    report_html += f"""
-                    <div class="row">
-                        <div>{name}</div>
-                        <div>{case_count}件</div>
-                        <div>{premium}</div>
-                        <div>{fee}</div>
-                    </div>
-                    """
+                    members.append({
+                        "name": name,
+                        "case": case_count,
+                        "premium": premium,
+                        "fee": fee
+                    })
 
                 except:
                     pass
 
+            # 排序（依保費）
+            members = sorted(
+                members,
+                key=lambda x: int(x["premium"].replace(",", "")),
+                reverse=True
+            )
+
+            top_html = ""
+
+            rank = 1
+
+            for m in members[:10]:
+
+                top_html += f"""
+                <tr>
+                    <td>{rank}</td>
+                    <td>{m['name']}</td>
+                    <td>{m['case']}</td>
+                    <td>{m['premium']}</td>
+                    <td>{m['fee']}</td>
+                </tr>
+                """
+
+                rank += 1
+
             html = f"""
+
             <!DOCTYPE html>
+
             <html>
 
             <head>
@@ -102,45 +125,102 @@ def run():
 
             <style>
 
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
 
             body {{
-                width: 1080px;
-                height: 1920px;
-                margin: 0;
-                padding: 60px;
-                box-sizing: border-box;
-                background: linear-gradient(#091540,#1b3c88);
-                color: white;
+                width:1080px;
+                height:1920px;
+                margin:0;
+                background:
+                linear-gradient(180deg,#07143c,#102b72);
 
-                font-family: 'Noto Sans TC', sans-serif;
+                color:white;
+
+                font-family:'Noto Sans TC',sans-serif;
+
+                padding:40px;
+                box-sizing:border-box;
             }}
 
             .title {{
-                font-size: 70px;
-                font-weight: bold;
-                margin-bottom: 40px;
+                font-size:90px;
+                font-weight:900;
+                text-align:center;
+
+                background:linear-gradient(#ffe9a8,#ffbf00);
+
+                -webkit-background-clip:text;
+                -webkit-text-fill-color:transparent;
+
+                margin-top:20px;
             }}
 
-            .table {{
-                background: rgba(255,255,255,0.1);
-                border-radius: 30px;
-                padding: 30px;
+            .sub {{
+                text-align:center;
+                font-size:36px;
+                margin-top:20px;
+                margin-bottom:40px;
             }}
 
-            .row {{
-                display:flex;
-                justify-content:space-between;
-                padding:20px 0;
-                border-bottom:1px solid rgba(255,255,255,0.2);
-                font-size:32px;
+            .card {{
+                background:rgba(255,255,255,0.08);
+
+                border:2px solid #ffcc00;
+
+                border-radius:30px;
+
+                padding:30px;
+
+                margin-bottom:40px;
+            }}
+
+            .card-title {{
+                font-size:50px;
+                font-weight:bold;
+                color:#ffd54f;
+
+                margin-bottom:20px;
+            }}
+
+            table {{
+                width:100%;
+                border-collapse:collapse;
+            }}
+
+            th {{
+                font-size:30px;
+                padding:20px;
+                color:#ffd54f;
+                border-bottom:1px solid rgba(255,255,255,0.3);
+            }}
+
+            td {{
+                text-align:center;
+                padding:20px;
+                font-size:28px;
+                border-bottom:1px solid rgba(255,255,255,0.1);
             }}
 
             .total {{
-                margin-top:40px;
-                font-size:42px;
-                color:yellow;
-                line-height:1.8;
+                margin-top:30px;
+
+                font-size:40px;
+
+                color:#ffe066;
+
+                line-height:2;
+            }}
+
+            .footer {{
+                text-align:center;
+
+                margin-top:60px;
+
+                font-size:44px;
+
+                color:#ffd54f;
+
+                font-weight:bold;
             }}
 
             </style>
@@ -150,31 +230,65 @@ def run():
             <body>
 
             <div class="title">
-            信安雲林 每日單位戰報
+            每日單位戰報
             </div>
 
-            <div class="table">
-
-            {report_html}
-
-            <div class="total">
-            全單位合計<br>
-            件數：{int(total_case)}<br>
-            保費：{int(total_premium):,}<br>
-            代理費：{int(total_fee):,}
+            <div class="sub">
+            信安雲林 AI 自動戰報
             </div>
 
+            <div class="card">
+
+                <div class="card-title">
+                TOP10 單位績效
+                </div>
+
+                <table>
+
+                    <tr>
+                        <th>排名</th>
+                        <th>業務員</th>
+                        <th>件數</th>
+                        <th>保費</th>
+                        <th>代理費</th>
+                    </tr>
+
+                    {top_html}
+
+                </table>
+
+                <div class="total">
+
+                全單位合計<br>
+
+                件數：{int(total_case)}<br>
+
+                保費：{int(total_premium):,}<br>
+
+                代理費：{int(total_fee):,}
+
+                </div>
+
+            </div>
+
+            <div class="footer">
+            信安雲林・打造未來的自己
             </div>
 
             </body>
+
             </html>
+
             """
 
             with open("report.html", "w", encoding="utf-8") as f:
                 f.write(html)
 
             page2 = browser.new_page(
-                viewport={"width":1080,"height":1920}
+                viewport={
+                    "width":1080,
+                    "height":1920
+                }
             )
 
             page2.goto("file:///app/report.html")
