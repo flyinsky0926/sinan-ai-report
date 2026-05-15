@@ -1,27 +1,24 @@
 from flask import Flask, send_file
 from playwright.sync_api import sync_playwright
 import os
-from datetime import datetime
 
 app = Flask(__name__)
 
 BROKER_ID = os.getenv("BROKER_ID")
 BROKER_PASSWORD = os.getenv("BROKER_PASSWORD")
 
+
 @app.route("/")
 def home():
     return "AI 戰報系統正常運行"
 
+
 @app.route("/run")
 def run():
 
+    report_html = ""
+
     try:
-
-        data = []
-
-        total_case = 0
-        total_premium = 0
-        total_fee = 0
 
         with sync_playwright() as p:
 
@@ -32,32 +29,33 @@ def run():
 
             page = browser.new_page()
 
-            print("前往登入頁")
-
+            # 登入
             page.goto("https://broker.s338.com.tw/")
 
             page.wait_for_timeout(3000)
 
-            # 登入
             page.locator('input[type="text"]').nth(1).fill(BROKER_ID)
+
             page.locator('input[type="password"]').fill(BROKER_PASSWORD)
 
             page.keyboard.press("Enter")
 
             page.wait_for_timeout(5000)
 
-            print("登入成功")
-
             # 業績頁
-            page.goto("https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1")
+            page.goto(
+                "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
+            )
 
             page.wait_for_timeout(5000)
-
-            print("開始抓資料")
 
             rows = page.locator("table tbody tr")
 
             count = rows.count()
+
+            total_case = 0
+            total_premium = 0
+            total_fee = 0
 
             for i in range(count):
 
@@ -76,118 +74,130 @@ def run():
 
                     fee = rows.nth(i).locator("td").nth(11).inner_text().strip()
 
-                    case_float = float(case_count.replace(",", ""))
-                    premium_float = float(premium.replace(",", ""))
-                    fee_float = float(fee.replace(",", ""))
+                    total_case += float(case_count.replace(",", ""))
 
-                    data.append({
-                        "name": name,
-                        "case": int(case_float),
-                        "premium": int(premium_float),
-                        "fee": int(fee_float)
-                    })
+                    total_premium += float(premium.replace(",", ""))
 
-                    total_case += case_float
-                    total_premium += premium_float
-                    total_fee += fee_float
+                    total_fee += float(fee.replace(",", ""))
+
+                    report_html += f"""
+                    <div class="row">
+                        <div>{name}</div>
+                        <div>{case_count}件</div>
+                        <div>{premium}</div>
+                        <div>{fee}</div>
+                    </div>
+                    """
 
                 except:
                     pass
 
-            # 排序 TOP10
-            sorted_data = sorted(
-                data,
-                key=lambda x: x['premium'],
-                reverse=True
-            )
+            html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="utf-8">
 
-            table_rows = ""
+            <style>
 
-            for idx, item in enumerate(sorted_data[:10]):
+            body {{
+                width: 1080px;
+                height: 1920px;
+                margin: 0;
+                padding: 60px;
+                box-sizing: border-box;
+                background: linear-gradient(#091540,#1b3c88);
+                color: white;
+                font-family: sans-serif;
+            }}
 
-                table_rows += f"""
-                <tr>
-                    <td>{idx+1}</td>
-                    <td>{item['name']}</td>
-                    <td>{item['case']}</td>
-                    <td>{item['premium']:,}</td>
-                    <td>{item['fee']:,}</td>
-                </tr>
-                """
+            .title {{
+                font-size: 70px;
+                font-weight: bold;
+                margin-bottom: 40px;
+            }}
 
-            # 讀 HTML 模板
-            with open("report_template.html", "r", encoding="utf-8") as f:
-                html = f.read()
+            .table {{
+                background: rgba(255,255,255,0.1);
+                border-radius: 30px;
+                padding: 30px;
+            }}
 
-            # 取代資料
-            html = html.replace(
-                "{{date}}",
-                datetime.now().strftime("%Y-%m-%d")
-            )
+            .row {{
+                display:flex;
+                justify-content:space-between;
+                padding:20px 0;
+                border-bottom:1px solid rgba(255,255,255,0.2);
+                font-size:32px;
+            }}
 
-            html = html.replace(
-                "{{total_case}}",
-                str(int(total_case))
-            )
+            .total {{
+                margin-top:40px;
+                font-size:42px;
+                color:yellow;
+                line-height:1.8;
+            }}
 
-            html = html.replace(
-                "{{total_premium}}",
-                f"{int(total_premium):,}"
-            )
+            </style>
+            </head>
 
-            html = html.replace(
-                "{{total_fee}}",
-                f"{int(total_fee):,}"
-            )
+            <body>
 
-            html = html.replace(
-                "{{table_rows}}",
-                table_rows
-            )
+            <div class="title">
+            信安雲林 每日單位戰報
+            </div>
 
-            # 生成 HTML
-            with open("battle_report.html", "w", encoding="utf-8") as f:
+            <div class="table">
+
+            {report_html}
+
+            <div class="total">
+            全單位合計<br>
+            件數：{int(total_case)}<br>
+            保費：{int(total_premium):,}<br>
+            代理費：{int(total_fee):,}
+            </div>
+
+            </div>
+
+            </body>
+            </html>
+            """
+
+            with open("report.html", "w", encoding="utf-8") as f:
                 f.write(html)
 
-            print("HTML 戰報生成成功")
+            page2 = browser.new_page(
+                viewport={"width":1080,"height":1920}
+            )
 
-            # 開啟戰報
-            page.goto("file:///app/battle_report.html")
+            page2.goto("file:///app/report.html")
 
-            page.wait_for_timeout(2000)
-
-            # 截圖
-            page.screenshot(
+            page2.screenshot(
                 path="battle_report.png",
                 full_page=True
             )
 
-            print("戰報圖片生成成功")
-
             browser.close()
 
-        return """
-        <h1>AI 戰報生成成功</h1>
-        <a href='/report'>查看戰報圖片</a>
-        """
+        return "AI 戰報生成成功"
 
     except Exception as e:
 
         return f"錯誤：{str(e)}"
+
 
 @app.route("/report")
 def report():
 
     return send_file(
         "battle_report.png",
-        mimetype='image/png'
+        mimetype="image/png"
     )
+
 
 if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 8080))
 
-    app.run(
-        host="0.0.0.0",
-        port=port
-    )
+    app.run(host="0.0.0.0", port=port)
