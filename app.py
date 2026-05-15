@@ -5,9 +5,8 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-page.locator('input[type="text"]').nth(1).fill(BROKER_ID)
-
-page.locator('input[type="password"]').fill(BROKER_PASSWORD)
+BROKER_ID = os.getenv("BROKER_ID")
+BROKER_PASSWORD = os.getenv("BROKER_PASSWORD")
 
 @app.route("/")
 def home():
@@ -40,13 +39,13 @@ def run():
 
             page.goto("https://broker.s338.com.tw/")
 
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(5000)
 
             print("⌨️ 輸入帳號密碼")
 
-            page.fill('input[type="text"]', BROKER_ID)
+            page.locator('input[type="text"]').nth(1).fill(BROKER_ID)
 
-            page.fill('input[type="password"]', BROKER_PASSWORD)
+            page.locator('input[type="password"]').fill(BROKER_PASSWORD)
 
             page.keyboard.press("Enter")
 
@@ -56,7 +55,9 @@ def run():
 
             print("🎯 開始進入績效頁面")
 
-            page.goto("https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1")
+            page.goto(
+                "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
+            )
 
             page.wait_for_timeout(5000)
 
