@@ -51,6 +51,8 @@ def run():
 
             page.wait_for_timeout(10000)
 
+            print(page.content())
+
             # 進業績頁
             page.goto(
                 "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
