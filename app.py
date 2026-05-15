@@ -60,7 +60,7 @@ def report():
 
                     tds = rows.nth(i).locator("td")
 
-                    if tds.count() < 12:
+                    if tds.count() < 10:
                         continue
 
                     name = tds.nth(0).inner_text().strip()
@@ -70,9 +70,9 @@ def report():
                     if status != "受理":
                         continue
 
-                    case_count = tds.nth(9).inner_text().strip()
-                    premium = tds.nth(10).inner_text().strip()
-                    fee = tds.nth(11).inner_text().strip()
+                    case_count = tds.nth(7).inner_text().strip()
+                    premium = tds.nth(8).inner_text().strip()
+                    fee = tds.nth(9).inner_text().strip()
 
                     case_count_num = int(float(case_count.replace(",", "")))
                     premium_num = int(float(premium.replace(",", "")))
