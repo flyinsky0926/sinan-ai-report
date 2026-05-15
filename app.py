@@ -1,16 +1,19 @@
 from flask import Flask
 from playwright.sync_api import sync_playwright
-from datetime import datetime, timedelta
 import os
-import threading
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
 BROKER_ID = os.getenv("BROKER_ID")
 BROKER_PASSWORD = os.getenv("BROKER_PASSWORD")
 
+@app.route("/")
+def home():
+    return "AI 戰報系統正常運行"
 
-def run_report():
+@app.route("/run")
+def run():
 
     print("🚀 信安雲林 AI 戰報系統啟動")
 
@@ -20,7 +23,10 @@ def run_report():
 
     with sync_playwright() as p:
 
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox"]
+        )
 
         page = browser.new_page()
 
@@ -44,38 +50,16 @@ def run_report():
 
         print("🎯 開始進入績效頁面")
 
-        page.goto(
-            "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
-        )
+        page.goto("https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1")
 
         page.wait_for_timeout(5000)
 
         print("📊 業績頁面載入成功")
 
-        print("🏆 AI 戰報測試成功")
-
         browser.close()
 
-
-@app.route("/")
-def home():
-    return "信安 AI 戰報系統運行中"
-
-
-@app.route("/run")
-def run_now():
-
-    thread = threading.Thread(target=run_report)
-    thread.start()
-
-    return "AI 戰報開始執行"
-
+    return "AI 戰報執行成功"
 
 if __name__ == "__main__":
-
     port = int(os.environ.get("PORT", 8080))
-
-    app.run(
-        host="0.0.0.0",
-        port=port
-    )
+    app.run(host="0.0.0.0", port=port)
