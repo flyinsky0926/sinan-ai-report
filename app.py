@@ -31,11 +31,17 @@ def run():
                 args=["--no-sandbox"]
             )
 
-            page = browser.new_page()
+            page = browser.new_page(
+                viewport={
+                    "width": 1600,
+                    "height": 3000
+                }
+            )
 
+            # 登入
             page.goto("https://broker.s338.com.tw/")
 
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(5000)
 
             page.locator('input[type="text"]').nth(1).fill(BROKER_ID)
 
@@ -43,13 +49,14 @@ def run():
 
             page.keyboard.press("Enter")
 
-            page.wait_for_timeout(5000)
+            page.wait_for_timeout(6000)
 
+            # 業績頁
             page.goto(
                 "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
             )
 
-            page.wait_for_timeout(5000)
+            page.wait_for_timeout(6000)
 
             rows = page.locator("table tbody tr")
 
@@ -59,55 +66,71 @@ def run():
 
                 try:
 
-                    name = rows.nth(i).locator("td").nth(0).inner_text().strip()
+                    cols = rows.nth(i).locator("td")
 
-                    status = rows.nth(i).locator("td").nth(2).inner_text().strip()
+                    if cols.count() < 12:
+                        continue
+
+                    name = cols.nth(0).inner_text().strip()
+
+                    status = cols.nth(2).inner_text().strip()
 
                     if status != "受理":
                         continue
 
-                    case_count = rows.nth(i).locator("td").nth(9).inner_text().strip()
+                    case_count = cols.nth(9).inner_text().strip()
 
-                    premium = rows.nth(i).locator("td").nth(10).inner_text().strip()
+                    premium = cols.nth(10).inner_text().strip()
 
-                    fee = rows.nth(i).locator("td").nth(11).inner_text().strip()
+                    fee = cols.nth(11).inner_text().strip()
 
-                    total_case += float(case_count.replace(",", ""))
+                    case_num = int(float(case_count.replace(",", "")))
+                    premium_num = int(float(premium.replace(",", "")))
+                    fee_num = int(float(fee.replace(",", "")))
 
-                    total_premium += float(premium.replace(",", ""))
-
-                    total_fee += float(fee.replace(",", ""))
+                    total_case += case_num
+                    total_premium += premium_num
+                    total_fee += fee_num
 
                     members.append({
                         "name": name,
-                        "case": case_count,
-                        "premium": premium,
-                        "fee": fee
+                        "case": case_num,
+                        "premium": premium_num,
+                        "fee": fee_num
                     })
 
                 except:
                     pass
 
-            # 排序（依保費）
+            # 排序
             members = sorted(
                 members,
-                key=lambda x: int(x["premium"].replace(",", "")),
+                key=lambda x: x["premium"],
                 reverse=True
             )
 
+            # TOP10
             top_html = ""
 
             rank = 1
 
+            medals = {
+                1: "🥇",
+                2: "🥈",
+                3: "🥉"
+            }
+
             for m in members[:10]:
+
+                medal = medals.get(rank, rank)
 
                 top_html += f"""
                 <tr>
-                    <td>{rank}</td>
+                    <td>{medal}</td>
                     <td>{m['name']}</td>
                     <td>{m['case']}</td>
-                    <td>{m['premium']}</td>
-                    <td>{m['fee']}</td>
+                    <td>{m['premium']:,}</td>
+                    <td>{m['fee']:,}</td>
                 </tr>
                 """
 
@@ -128,26 +151,35 @@ def run():
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
 
             body {{
+
                 width:1080px;
                 height:1920px;
-                margin:0;
-                background:
-                linear-gradient(180deg,#07143c,#102b72);
 
-                color:white;
+                margin:0;
+
+                background:
+                radial-gradient(circle at top,#173b8f,#07122f);
 
                 font-family:'Noto Sans TC',sans-serif;
 
-                padding:40px;
-                box-sizing:border-box;
+                color:white;
+
+                overflow:hidden;
+            }}
+
+            .container {{
+                padding:50px;
             }}
 
             .title {{
-                font-size:90px;
-                font-weight:900;
+
                 text-align:center;
 
-                background:linear-gradient(#ffe9a8,#ffbf00);
+                font-size:92px;
+
+                font-weight:900;
+
+                background:linear-gradient(#fff3b0,#ffb703);
 
                 -webkit-background-clip:text;
                 -webkit-text-fill-color:transparent;
@@ -156,13 +188,20 @@ def run():
             }}
 
             .sub {{
+
                 text-align:center;
-                font-size:36px;
+
                 margin-top:20px;
-                margin-bottom:40px;
+
+                font-size:34px;
+
+                opacity:0.9;
             }}
 
             .card {{
+
+                margin-top:40px;
+
                 background:rgba(255,255,255,0.08);
 
                 border:2px solid #ffcc00;
@@ -171,52 +210,73 @@ def run():
 
                 padding:30px;
 
-                margin-bottom:40px;
+                box-shadow:0 0 40px rgba(255,204,0,0.2);
             }}
 
             .card-title {{
-                font-size:50px;
+
+                font-size:52px;
+
                 font-weight:bold;
+
                 color:#ffd54f;
 
-                margin-bottom:20px;
+                margin-bottom:30px;
             }}
 
             table {{
+
                 width:100%;
+
                 border-collapse:collapse;
             }}
 
             th {{
-                font-size:30px;
-                padding:20px;
+
                 color:#ffd54f;
-                border-bottom:1px solid rgba(255,255,255,0.3);
+
+                font-size:30px;
+
+                padding:20px;
+
+                border-bottom:2px solid rgba(255,255,255,0.2);
             }}
 
             td {{
+
                 text-align:center;
-                padding:20px;
+
+                padding:22px;
+
                 font-size:28px;
-                border-bottom:1px solid rgba(255,255,255,0.1);
+
+                border-bottom:1px solid rgba(255,255,255,0.08);
             }}
 
             .total {{
-                margin-top:30px;
+
+                margin-top:40px;
+
+                background:rgba(255,204,0,0.1);
+
+                border-radius:20px;
+
+                padding:30px;
 
                 font-size:40px;
 
-                color:#ffe066;
-
                 line-height:2;
+
+                color:#ffe082;
             }}
 
             .footer {{
+
                 text-align:center;
 
-                margin-top:60px;
+                margin-top:50px;
 
-                font-size:44px;
+                font-size:46px;
 
                 color:#ffd54f;
 
@@ -229,50 +289,54 @@ def run():
 
             <body>
 
-            <div class="title">
-            每日單位戰報
-            </div>
+            <div class="container">
 
-            <div class="sub">
-            信安雲林 AI 自動戰報
-            </div>
-
-            <div class="card">
-
-                <div class="card-title">
-                TOP10 單位績效
+                <div class="title">
+                每日單位戰報
                 </div>
 
-                <table>
+                <div class="sub">
+                信安雲林 AI 自動生成戰報
+                </div>
 
-                    <tr>
-                        <th>排名</th>
-                        <th>業務員</th>
-                        <th>件數</th>
-                        <th>保費</th>
-                        <th>代理費</th>
-                    </tr>
+                <div class="card">
 
-                    {top_html}
+                    <div class="card-title">
+                    TOP10 單位績效
+                    </div>
 
-                </table>
+                    <table>
 
-                <div class="total">
+                        <tr>
+                            <th>排名</th>
+                            <th>業務員</th>
+                            <th>件數</th>
+                            <th>保費</th>
+                            <th>代理費</th>
+                        </tr>
 
-                全單位合計<br>
+                        {top_html}
 
-                件數：{int(total_case)}<br>
+                    </table>
 
-                保費：{int(total_premium):,}<br>
+                    <div class="total">
 
-                代理費：{int(total_fee):,}
+                    📌 全單位合計<br>
+
+                    件數：{total_case}<br>
+
+                    保費：{total_premium:,}<br>
+
+                    代理費：{total_fee:,}
+
+                    </div>
 
                 </div>
 
-            </div>
+                <div class="footer">
+                信安雲林・打造未來的自己
+                </div>
 
-            <div class="footer">
-            信安雲林・打造未來的自己
             </div>
 
             </body>
