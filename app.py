@@ -23,39 +23,44 @@ def run():
                 args=["--no-sandbox"]
             )
 
-            page = browser.new_page()
+            page = browser.new_page(
+                viewport={"width": 1400, "height": 1000}
+            )
 
+            # 進登入頁
             page.goto("https://broker.s338.com.tw/")
-
-            page.wait_for_timeout(5000)
-
-            print("開始登入")
-
-            # 帳號
-            page.get_by_placeholder("請輸入帳號").fill(BROKER_ID)
-
-            # 密碼
-            page.get_by_placeholder("請輸入密碼").fill(BROKER_PASSWORD)
-
-            # 點登入
-            page.locator('input[type="submit"]').click()
 
             page.wait_for_timeout(8000)
 
-            print("登入成功")
+            # 點帳號框
+            page.mouse.click(720, 470)
 
-            # 業績頁
+            page.keyboard.type(BROKER_ID)
+
+            page.wait_for_timeout(1000)
+
+            # 點密碼框
+            page.mouse.click(720, 540)
+
+            page.keyboard.type(BROKER_PASSWORD)
+
+            page.wait_for_timeout(1000)
+
+            # 點登入
+            page.mouse.click(720, 650)
+
+            page.wait_for_timeout(10000)
+
+            # 進業績頁
             page.goto(
                 "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
             )
 
-            page.wait_for_timeout(8000)
+            page.wait_for_timeout(10000)
 
             rows = page.locator("table tbody tr")
 
             count = rows.count()
-
-            print("資料筆數:", count)
 
             cards = ""
 
@@ -120,7 +125,6 @@ def run():
                 font-size:72px;
                 color:#ffd95a;
                 font-weight:bold;
-                margin-bottom:10px;
             }}
 
             .sub {{
@@ -210,3 +214,4 @@ def run():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
+    
