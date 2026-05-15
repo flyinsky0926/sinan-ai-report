@@ -97,7 +97,7 @@ def run():
             <html>
             <head>
             <meta charset="utf-8">
-
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+TC">            
             <style>
 
             body {{
@@ -108,7 +108,7 @@ def run():
                 box-sizing: border-box;
                 background: linear-gradient(#091540,#1b3c88);
                 color: white;
-                font-family: sans-serif;
+                font-family: "Microsoft JhengHei";
             }}
 
             .title {{
