@@ -95,10 +95,14 @@ def run():
             html = f"""
             <!DOCTYPE html>
             <html>
+
             <head>
+
             <meta charset="utf-8">
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+TC">            
+
             <style>
+
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
 
             body {{
                 width: 1080px;
@@ -108,7 +112,8 @@ def run():
                 box-sizing: border-box;
                 background: linear-gradient(#091540,#1b3c88);
                 color: white;
-                font-family: "Microsoft JhengHei";
+
+                font-family: 'Noto Sans TC', sans-serif;
             }}
 
             .title {{
@@ -139,6 +144,7 @@ def run():
             }}
 
             </style>
+
             </head>
 
             <body>
@@ -172,6 +178,8 @@ def run():
             )
 
             page2.goto("file:///app/report.html")
+
+            page2.wait_for_timeout(5000)
 
             page2.screenshot(
                 path="battle_report.png",
