@@ -5,8 +5,9 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-BROKER_ID = os.getenv("BROKER_ID")
-BROKER_PASSWORD = os.getenv("BROKER_PASSWORD")
+page.locator('input[type="text"]').nth(1).fill(BROKER_ID)
+
+page.locator('input[type="password"]').fill(BROKER_PASSWORD)
 
 @app.route("/")
 def home():
