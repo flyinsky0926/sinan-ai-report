@@ -3,3 +3,4 @@ pandas
 jinja2
 requests
 python-dotenv
+playwright-stealth
