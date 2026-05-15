@@ -15,50 +15,62 @@ def home():
 @app.route("/run")
 def run():
 
-    print("🚀 信安雲林 AI 戰報系統啟動")
+    try:
 
-    yesterday = datetime.now() - timedelta(days=1)
+        print("🚀 信安雲林 AI 戰報系統啟動")
 
-    print(f"📅 查詢日期：{yesterday.strftime('%Y-%m-%d')}")
+        yesterday = datetime.now() - timedelta(days=1)
 
-    with sync_playwright() as p:
+        print(f"📅 查詢日期：{yesterday.strftime('%Y-%m-%d')}")
 
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox"]
-        )
+        with sync_playwright() as p:
 
-        page = browser.new_page()
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage"
+                ]
+            )
 
-        print("🔐 前往 broker 登入頁")
+            page = browser.new_page()
 
-        page.goto("https://broker.s338.com.tw/")
+            print("🔐 前往 broker 登入頁")
 
-        page.wait_for_timeout(3000)
+            page.goto("https://broker.s338.com.tw/")
 
-        print("⌨️ 輸入帳號密碼")
+            page.wait_for_timeout(3000)
 
-        page.fill('input[type="text"]', BROKER_ID)
+            print("⌨️ 輸入帳號密碼")
 
-        page.fill('input[type="password"]', BROKER_PASSWORD)
+            page.fill('input[type="text"]', BROKER_ID)
 
-        page.keyboard.press("Enter")
+            page.fill('input[type="password"]', BROKER_PASSWORD)
 
-        page.wait_for_timeout(5000)
+            page.keyboard.press("Enter")
 
-        print("✅ 登入完成")
+            page.wait_for_timeout(5000)
 
-        print("🎯 開始進入績效頁面")
+            print("✅ 登入完成")
 
-        page.goto("https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1")
+            print("🎯 開始進入績效頁面")
 
-        page.wait_for_timeout(5000)
+            page.goto("https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1")
 
-        print("📊 業績頁面載入成功")
+            page.wait_for_timeout(5000)
 
-        browser.close()
+            print("📊 業績頁面載入成功")
 
-    return "AI 戰報執行成功"
+            browser.close()
+
+        return "AI 戰報執行成功"
+
+    except Exception as e:
+
+        print("❌ 發生錯誤")
+        print(str(e))
+
+        return f"錯誤：{str(e)}"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
