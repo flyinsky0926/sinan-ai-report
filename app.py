@@ -52,6 +52,8 @@ def report():
 
             rows = page.locator("table tbody tr")
 
+            print(page.content())
+
             count = rows.count()
 
             for i in range(count):
