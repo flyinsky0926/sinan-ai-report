@@ -61,9 +61,19 @@ def run():
 
             page.wait_for_timeout(5000)
 
-            print("📊 業績頁面載入成功")
+print("📊 業績頁面載入成功")
 
-            browser.close()
+requests.post(
+    "https://notify-api.line.me/api/notify",
+    headers={
+        "Authorization": f"Bearer {LINE_NOTIFY_TOKEN}"
+    },
+    data={
+        "message": "AI 戰報執行成功"
+    }
+)
+
+browser.close()
 
         return "AI 戰報執行成功"
 
