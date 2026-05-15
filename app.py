@@ -16,8 +16,6 @@ def run():
 
     try:
 
-        report_html = ""
-
         with sync_playwright() as p:
 
             browser = p.chromium.launch(
@@ -33,18 +31,28 @@ def run():
 
             page.wait_for_timeout(5000)
 
-            # 正確登入方式
-            page.locator("#Account").fill(BROKER_ID)
-            page.locator("#Password").fill(BROKER_PASSWORD)
+            # 直接抓所有 input
+            inputs = page.locator("input")
 
-            page.locator('input[type="submit"]').click()
+            print("input數量:", inputs.count())
+
+            # 帳號
+            inputs.nth(0).fill(BROKER_ID)
+
+            # 密碼
+            inputs.nth(1).fill(BROKER_PASSWORD)
+
+            # 登入
+            inputs.nth(2).click()
 
             page.wait_for_timeout(8000)
 
-            print("登入成功")
+            print("登入完成")
 
-            # 進入業績頁
-            page.goto("https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1")
+            # 前往業績頁
+            page.goto(
+                "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
+            )
 
             page.wait_for_timeout(8000)
 
@@ -69,6 +77,7 @@ def run():
                     cols = rows.nth(i).locator("td")
 
                     name = cols.nth(0).inner_text().strip()
+
                     status = cols.nth(2).inner_text().strip()
 
                     if status != "受理":
@@ -97,27 +106,26 @@ def run():
                 except:
                     pass
 
-            report_html = f"""
+            html = f"""
             <html>
             <head>
             <meta charset="UTF-8">
+
             <style>
 
             body {{
                 margin:0;
                 padding:40px;
-                font-family: Microsoft JhengHei;
-                background:
-                linear-gradient(180deg,#08133d,#16286f);
+                font-family:Microsoft JhengHei;
+                background:linear-gradient(180deg,#08133d,#1d2f7a);
                 color:white;
             }}
 
             .title {{
                 text-align:center;
                 font-size:72px;
-                font-weight:bold;
                 color:#ffd95a;
-                margin-bottom:10px;
+                font-weight:bold;
             }}
 
             .sub {{
@@ -141,7 +149,7 @@ def run():
 
             .rank {{
                 color:#ffd95a;
-                font-size:36px;
+                font-size:34px;
                 font-weight:bold;
             }}
 
@@ -160,8 +168,8 @@ def run():
                 margin-top:40px;
                 background:#ffd95a;
                 color:#111;
-                padding:30px;
                 border-radius:20px;
+                padding:30px;
                 text-align:center;
                 font-size:32px;
                 font-weight:bold;
@@ -177,7 +185,7 @@ def run():
             </div>
 
             <div class="sub">
-            信安雲林 AI 自動戰報系統
+            信安雲林 AI 自動戰報
             </div>
 
             <div class="grid">
@@ -198,7 +206,7 @@ def run():
 
             browser.close()
 
-        return report_html
+            return html
 
     except Exception as e:
 
