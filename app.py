@@ -11,6 +11,10 @@ BROKER_PASSWORD = os.getenv("BROKER_PASSWORD")
 def home():
     return "AI 戰報系統正常運行"
 
+@app.route("/run")
+def run():
+    return report()
+
 @app.route("/report")
 def report():
 
@@ -31,30 +35,39 @@ def report():
 
             page = browser.new_page()
 
+            print("前往登入頁")
+
             page.goto("https://broker.s338.com.tw/")
 
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(5000)
 
-            # 登入
+            print("開始登入")
+
             page.locator('input[type="text"]').nth(1).fill(BROKER_ID)
+
             page.locator('input[type="password"]').fill(BROKER_PASSWORD)
 
             page.keyboard.press("Enter")
 
-            page.wait_for_timeout(5000)
+            page.wait_for_timeout(8000)
 
-            # 進入業績頁
+            print("登入成功")
+
             page.goto(
                 "https://broker.s338.com.tw/Achievement/AchievementListDetail?SType=1"
             )
 
-            page.wait_for_timeout(5000)
+            page.wait_for_timeout(8000)
 
-            rows = page.locator("table tbody tr")
+            print("進入業績頁")
 
             print(page.content())
 
+            rows = page.locator("table tbody tr")
+
             count = rows.count()
+
+            print(f"抓到 {count} 筆")
 
             for i in range(count):
 
@@ -73,11 +86,15 @@ def report():
                         continue
 
                     case_count = tds.nth(7).inner_text().strip()
+
                     premium = tds.nth(8).inner_text().strip()
+
                     fee = tds.nth(9).inner_text().strip()
 
                     case_count_num = int(float(case_count.replace(",", "")))
+
                     premium_num = int(float(premium.replace(",", "")))
+
                     fee_num = int(float(fee.replace(",", "")))
 
                     members.append({
@@ -96,7 +113,6 @@ def report():
 
             browser.close()
 
-        # 排序 TOP10
         members = sorted(
             members,
             key=lambda x: x["fee"],
@@ -113,8 +129,10 @@ def report():
 
             if rank == 1:
                 medal = "🥇"
+
             elif rank == 2:
                 medal = "🥈"
+
             elif rank == 3:
                 medal = "🥉"
 
@@ -146,86 +164,81 @@ def report():
 
 body {{
 
-    width:1080px;
-    height:1920px;
-
     margin:0;
 
     font-family:'Noto Sans TC',sans-serif;
 
     background:
-    radial-gradient(circle at top,#123b8a,#050b1f);
+    radial-gradient(circle at top,#1f3f99,#050b1f);
 
     color:white;
-
-    overflow:hidden;
 }}
 
 .container {{
 
+    width:1080px;
+
+    min-height:1920px;
+
+    margin:auto;
+
     padding:40px;
+
+    box-sizing:border-box;
 }}
 
 .main-title {{
 
     text-align:center;
 
-    font-size:120px;
+    font-size:96px;
 
     font-weight:900;
 
-    line-height:1;
+    color:#ffd54f;
 
-    margin-top:20px;
+    margin-top:30px;
 
-    background:linear-gradient(#fff7c2,#ffbf00);
-
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-
-    text-shadow:0 0 30px rgba(255,200,0,0.5);
+    text-shadow:0 0 20px rgba(255,200,0,0.5);
 }}
 
 .sub-title {{
 
     text-align:center;
 
-    font-size:42px;
+    font-size:36px;
 
-    margin-top:20px;
+    margin-top:10px;
 
     color:#ffffffcc;
 }}
 
 .panel {{
 
-    margin-top:50px;
+    margin-top:60px;
 
-    background:rgba(0,0,0,0.25);
-
-    border:3px solid #ffcc00;
+    border:3px solid #ffd54f;
 
     border-radius:30px;
 
     overflow:hidden;
 
-    box-shadow:
-    0 0 40px rgba(255,200,0,0.2);
+    background:rgba(255,255,255,0.05);
 }}
 
 .panel-header {{
 
-    background:linear-gradient(90deg,#071b44,#1d4ea5);
+    background:linear-gradient(90deg,#071b44,#204ea8);
 
     padding:25px;
 
-    font-size:54px;
+    text-align:center;
+
+    font-size:48px;
 
     font-weight:bold;
 
     color:#ffd54f;
-
-    text-align:center;
 }}
 
 table {{
@@ -241,18 +254,18 @@ th {{
 
     color:#ffd54f;
 
-    font-size:32px;
+    font-size:28px;
 
-    padding:24px;
+    padding:20px;
 }}
 
 td {{
 
     text-align:center;
 
-    padding:24px;
+    padding:20px;
 
-    font-size:30px;
+    font-size:28px;
 
     border-bottom:1px solid rgba(255,255,255,0.08);
 }}
@@ -274,7 +287,7 @@ tr:nth-child(even) {{
 
     padding:35px;
 
-    font-size:42px;
+    font-size:38px;
 
     line-height:2;
 
@@ -287,7 +300,7 @@ tr:nth-child(even) {{
 
     text-align:center;
 
-    font-size:54px;
+    font-size:48px;
 
     font-weight:900;
 
@@ -300,7 +313,7 @@ tr:nth-child(even) {{
 
     margin-top:20px;
 
-    font-size:32px;
+    font-size:28px;
 
     color:#ffffffcc;
 }}
